@@ -29,6 +29,7 @@ object NumericalDomains extends ParameterEnumeration[NumericalDomain] {
   val description = "The numerical domain to use for the analysis."
 
   val values: Buffer[ParameterValue[NumericalDomain]] = Buffer(
+    ParameterValue(SignDomain(), "Signs", "Domain of signs"),
     ParameterValue(BoxDoubleDomain(), "BoxDouble",
       "This is a native Scala implementation of boxes. It is safe " +
       "w.r.t. double arithmetics."),
