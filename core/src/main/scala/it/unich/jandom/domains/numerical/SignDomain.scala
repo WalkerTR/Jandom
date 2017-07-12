@@ -168,7 +168,7 @@ class SignDomain extends NumericalDomain {
      * @note @inheritdoc
      * @throws $ILLEGAL
      */
-    def widening(that: Property) = that
+    def widening(that: Property) = that union this
 
     /**
      * This is the standard narrowing on signs, i.e. one that does nothing,
