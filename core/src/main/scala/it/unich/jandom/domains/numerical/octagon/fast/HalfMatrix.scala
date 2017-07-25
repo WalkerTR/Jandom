@@ -6,26 +6,11 @@ package it.unich.jandom.domains.numerical.octagon.fast
   * Implementation of matrices that are represented by storing only the lower
   * triangular half of it, as explained in Singh et al.
   */
-class HalfMatrix[A](private val vec: Vector[A], val dimension: Int) {
+class HalfMatrix[A](vec: Vector[A], val dimension: Int) {
 
   require(dimension > 0)
 
   private def getIndex(i: Int, j: Int): Int = j + ((i+1)*(i+1))/2
-
-  /*
-  private def fromIndex(x: Int): (Int, Int) = {
-    def aux(i: Int, j: Int): (Int, Int) = {
-      if (getIndex(i, j) == x)
-        (i, j)
-      else if (getIndex(i + 1, j) <= x)
-        aux(i + 1, j)
-      else
-        aux(i, j + 1)
-    }
-
-    aux(0,0)
-  }
-  */
 
   private def elementIndex(i: Int, j: Int): Int =
     if (i < j)
@@ -33,12 +18,19 @@ class HalfMatrix[A](private val vec: Vector[A], val dimension: Int) {
     else
       getIndex(i, j)
 
+  def get(i: Int, j: Int): A = vec(elementIndex(i,j))
+
   def update(i: Int, j: Int, x: A): HalfMatrix[A] = {
     require(0 <= i && i < dimension && 0 <= j && j < dimension)
     new HalfMatrix(vec.updated(elementIndex(i, j), x), dimension)
   }
 
-  // def update(updater: (Int, Int) => A): HalfMatrix[A] = ???
+  def update(updater: (Int, Int) => A): HalfMatrix[A] = {
+    val values = for (i <- 0 until dimension;
+                      j <- 0 to (if (i % 2 == 0) i+1 else i))
+                  yield updater(i, j)
+    new HalfMatrix(values.toVector, dimension)
+  }
 
   def apply(i: Int, j: Int): A = {
     require(0 <= i && i < dimension && 0 <= j && j < dimension)
