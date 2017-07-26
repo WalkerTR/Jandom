@@ -16,7 +16,9 @@ final case class MkEx[S <: DBMState, M[_]](elem: M[S])
   extends ExistsDBM[M] { type State = S }
 
 // Distinguish integers used as variable indices
-case class VarIndex(i: Int)
+case class VarIndex(i: Int) extends Ordered[VarIndex] {
+  def compare(that: VarIndex) = this.i compare that.i
+}
 
 object VarIndexOps {
   def varPlus(v: VarIndex): Int = 2 * v.i
