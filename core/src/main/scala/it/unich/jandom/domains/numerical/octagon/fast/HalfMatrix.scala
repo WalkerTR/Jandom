@@ -6,7 +6,7 @@ package it.unich.jandom.domains.numerical.octagon.fast
   * Implementation of matrices that are represented by storing only the lower
   * triangular half of it, as explained in Singh et al.
   */
-class HalfMatrix[A](vec: Vector[A], val dimension: Int) {
+class HalfMatrix[A](private val vec: Vector[A], val dimension: Int) {
 
   require(dimension > 0)
 
