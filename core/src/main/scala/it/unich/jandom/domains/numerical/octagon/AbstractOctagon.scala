@@ -41,8 +41,9 @@ case class AbstractOctagon[M[_, _]](dbm: M[Closed, Double],
   def forget(vi: VarIndex): AbstractOctagon[M] =
     AbstractOctagon(e.forget(vi)(dbm), e)
 
-  def top = AbstractOctagon(e.topDBM[Double](e.nOfVars(dbm)), e)
-  def bottom = AbstractOctagon(e.bottomDBM[Double](e.nOfVars(dbm)), e)
+  def top = AbstractOctagon.top(e.nOfVars(dbm))(e)
+
+  def bottom = AbstractOctagon.top(e.nOfVars(dbm))(e)
 
   def widening(other: AbstractOctagon[M]): AbstractOctagon[M] =
     AbstractOctagon(e.strongClosure(e.widening(dbm, other.dbm).elem), e)
@@ -473,6 +474,8 @@ case class AbstractOctagon[M[_, _]](dbm: M[Closed, Double],
 }
 
 object AbstractOctagon {
+  def top[M[_,_]] (nOfVars: Int)(implicit e: DifferenceBoundMatrix[M] { type PosetConstraint[A] = InfField[A] }) = AbstractOctagon(e.topDBM[Double](nOfVars), e)
+  def bottom[M[_,_]] (nOfVars: Int)(implicit e: DifferenceBoundMatrix[M] { type PosetConstraint[A] = InfField[A] }) = AbstractOctagon(e.bottomDBM[Double](nOfVars), e)
   def fromInterval[M[_,_]] (box: BoxDoubleDomain#Property, e: DifferenceBoundMatrix[M] { type PosetConstraint[A] = InfField[A] }): AbstractOctagon[M] = {
     require (box.low.size == box.high.size)
     val indices = (0 until box.high.size).map(x => VarIndex(x))
