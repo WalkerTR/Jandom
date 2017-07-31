@@ -1,8 +1,6 @@
 package it.unich.jandom.domains.numerical.octagon
 import scalaz._
 
-import scala.language.higherKinds
-
 // Simple implementation of a functional square matrix.
 // For test purposes only.
 case class FunMatrix[A](fun: (Int, Int) => A, dimension: Int) {
