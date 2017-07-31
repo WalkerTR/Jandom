@@ -6,7 +6,8 @@ import scalaz._
 case class FunMatrix[A](fun: (Int, Int) => A, dimension: Int) {
 
   def update(i: Int, j: Int, x: A): FunMatrix[A] = {
-    require(0 <= i && i < dimension && 0 <= j && j < dimension)
+    require(0 <= i && i < dimension && 0 <= j && j < dimension,
+      "Can't update (" + i + "," + j + "), dimension is " + dimension)
     update((ii, jj) => if (ii == i && jj == j) x else fun(ii, jj))
   }
 
@@ -14,7 +15,8 @@ case class FunMatrix[A](fun: (Int, Int) => A, dimension: Int) {
     new FunMatrix(updater, dimension)
 
   def apply(i: Int, j: Int): A = {
-    require(0 <= i && i < dimension && 0 <= j && j < dimension)
+    require(0 <= i && i < dimension && 0 <= j && j < dimension,
+      "Can't apply (" + i + "," + j + "), dimension is " + dimension)
     fun(i, j)
   }
 
