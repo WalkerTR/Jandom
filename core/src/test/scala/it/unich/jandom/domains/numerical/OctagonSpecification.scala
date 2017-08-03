@@ -39,6 +39,16 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
     (p-1, GenNonnegDoubles)
   )
 
+  // These are for disabling shrinking
+  // From https://gist.github.com/davidallsopp/f65d73fea8b5e5165fc3
+  //
+  // TODO Find a better way
+
+  import org.scalacheck.Shrink
+  implicit val noShrink: Shrink[Int] = Shrink.shrinkAny
+  implicit val noShrink2: Shrink[(Double, Double)] = Shrink.shrinkAny
+  implicit val noShrink3: Shrink[FunMatrix[Double]] = Shrink.shrinkAny
+
   def GenOrderedPair : Gen[(Double, Double)] = for {
     low <- arbitrary[Double]
     high <- Gen.choose(low, Double.MaxValue)
