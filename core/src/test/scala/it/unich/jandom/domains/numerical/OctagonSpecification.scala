@@ -25,19 +25,53 @@ import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
+import spire.math.Rational
+import spire.math.RationalAlgebra
 
 class OctagonSpecification extends PropSpec with PropertyChecks {
+  val r = new RationalAlgebra()
   val e = FunDBMInstance.funDBM
   val oct = new OctagonDomain(e)
   val box = BoxDoubleDomain(false)
 
-  def GenSmallInt : Gen[Int] = Gen.choose(1, 16)
+  def GenSmallInt : Gen[Int] = Gen.choose(1, 5)
   def GenSmallEvenInt : Gen[Int] = for (n <- GenSmallInt) yield (n * 2)
   def GenInf : Gen[Double] = Gen.const(Double.PositiveInfinity)
   def GenNonnegDoubles : Gen[Double] = Gen.choose(0, Double.MaxValue)
-  def GenDoublesAndInf(p: Int = 10) : Gen[Double] = Gen.frequency(
-    (1, GenInf),
-    (p-1, GenNonnegDoubles)
+  def GenDoublesAndInf(pInf: Int) : Gen[Double] = Gen.frequency(
+    (pInf, GenInf),
+    (100 - pInf, GenNonnegDoubles)
+  )
+
+  implicit def arbRational: Arbitrary[Rational] =
+    Arbitrary {
+      for {
+        n <- arbitrary[Int]
+        d <- arbitrary[Int]
+      } yield(r.fromInt(n)) / r.fromInt(Math.max(1,Math.abs(d))) // max(1,d) is a hackish way to avoid n/0
+    }
+
+  def GenArbitraryLf(n: Int): Gen[LinearForm] = for
+  {
+    coeffs <- Gen.containerOfN[List, Rational](n, arbitrary[Rational])
+  } yield new DenseLinearForm(coeffs)
+
+  def GenExactLf(n: Int): Gen[LinearForm] = for
+  {
+    vi <- Gen.choose(0, n - 1)
+    ci <- Gen.oneOf(+1, -1)
+    vj <- Gen.choose(0, n - 1)
+    cj <- Gen.oneOf(+1, 0, -1)
+  } yield new DenseLinearForm(
+    Array.fill[Rational](n)(0)
+      .updated(vi, r.toRational(ci))
+      .updated(vj, r.toRational(cj))
+      .toSeq
+  )
+
+  def GenLf(n: Int, pExact: Int = 10) : Gen[LinearForm] = Gen.frequency(
+    (100 - pExact, GenArbitraryLf(n)),
+    (pExact, GenExactLf(n))
   )
 
   // These are for disabling shrinking
@@ -74,6 +108,24 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
         else arrayOfRows(i)(j), Dimension(d)))
     )
   } yield matrix
+
+
+  def GenClosedFunDBM(pBot: Int = 10, pTop: Int = 20, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] = {
+    val genRegularClosedDBM : Gen[FunDBM[Closed, Double]] =
+      for { m <- GenFunMatrix(pTop, pInf) }
+      yield new ClosedFunDBM(BagnaraStrongClosure.strongClosure(m).get)
+
+    val genBottomDBM : Gen[FunDBM[Closed, Double]] =
+      for { d <- GenSmallInt }
+      yield BottomFunDBM(VarCount(d))
+
+    for {
+      dbm <- Gen.frequency(
+        (pBot, genBottomDBM),
+        (100 - pBot, genRegularClosedDBM)
+      )
+    } yield dbm
+  }
 
   implicit def arbBox : Arbitrary[box.Property] =
     Arbitrary {
