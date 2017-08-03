@@ -234,21 +234,21 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
       (c: (Double, Double)) =>
         forAll(GenOrderedDistinctPair) {
           (d: (Double, Double)) => {
-            assert(d._1 < c._1)
-            assert(d._2 > c._2)
-            val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
-            val lf1 = LinearForm.c(c._1);
-            val lf2 = LinearForm.c(c._2);
+            val c1 = c._1
+            val c2 = c._2
+            assert(c._1 < c._2)
+            assert(d._1 < d._2)
             val posC = (d._2 - d._1) // is certainly positive
-            assert(posC > 0)
-            val lf3 = LinearForm.c(c._1 - posC);
-            val lf4 = LinearForm.c(c._2 + posC);
-            val b1 = a.linearAssignment(0, lf1)
-            val b2 = a.linearAssignment(0, lf2)
-            val b3 = a.linearAssignment(0, lf3)
-            val b4 = a.linearAssignment(0, lf4)
-            val i1 = b1 union b2 // i1 = [x1,x2]
-            val i2 = b3 union b4 // i2 = [x3,x4]
+            val c3 = c1 - posC
+            val c4 = c1 + posC
+            assert(c3 < c1 & c1 < c4 & c4 < c2)
+            val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
+            val b1 = a.linearAssignment(0, LinearForm.c(c1))
+            val b2 = a.linearAssignment(0, LinearForm.c(c2))
+            val b3 = a.linearAssignment(0, LinearForm.c(c3))
+            val b4 = a.linearAssignment(0, LinearForm.c(c4))
+            val i1 = b1 union b2 // i1 = [c1,c2]
+            val i2 = b3 union b4 // i2 = [c3,c4]
             (i1 <= i2)
           }
         }
