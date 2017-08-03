@@ -136,6 +136,21 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
     }
 
 
+  def checkIsLegal(m : FunMatrix[Double]) : Boolean =
+    (1 until m.dimension.dim).forall(
+      (i)=>(1 until m.dimension.dim).forall(
+        (j)=>
+        !m(i,j).isNaN
+          &&
+        (m(i,j) >= Double.MinValue
+          &
+          m(i,j) <= Double.MaxValue)
+          |
+          m(i,j) == Double.PositiveInfinity
+      )
+    )
+
+
   //////////////////////////////////////////////////////////////////////////////
   // Begin properties
   //////////////////////////////////////////////////////////////////////////////
@@ -388,6 +403,72 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
               }
             }
         }
+    }
+  }
+
+  property ("Check that strongClosure produces legal values") {
+    // i.e. this mainly means some NaNs we had to hunt down
+    forAll (GenFunMatrix()) {
+      case (m : FunMatrix[Double]) =>
+        BagnaraStrongClosure.strongClosure(m) match {
+          case None =>
+            false
+          case Some(c) =>
+            checkIsLegal(c)
+        }
+    }
+  }
+
+  property ("Check that toInterval yields a valid interval") {
+    forAll(GenClosedFunDBM()) {
+      case dbm : FunDBM[Closed, Double] =>
+      {
+        val o = new AbstractOctagon(dbm, oct, e)
+        o.toInterval <= box.top(dbm.noOfVariables.count)
+        o.toInterval >= box.bottom(dbm.noOfVariables.count)
+      }
+    }
+  }
+
+  property ("Check that linearAssignment yields legal values") {
+    forAll(GenClosedFunDBM()) {
+      case dbm : FunDBM[Closed, Double] =>
+      {
+        val o = new AbstractOctagon(dbm, oct, e)
+        forAll(GenLf(o.dimension)) {
+          case lf : LinearForm =>
+            forAll(Gen.choose(0, o.dimension - 1)) {
+              case vi : Int =>
+                {
+                  val ass = o.linearAssignment(vi, lf)
+                  ass <= AbstractOctagon(e.topDBM[Double](VarCount(o.dimension)), oct, e)
+                  ass.dbm match {
+                    case dbm : ClosedFunDBM[Double] => checkIsLegal(dbm.m)
+                    case b : BottomFunDBM[Double] => true
+                    case _ => false
+                  }
+                }
+          }
+        }
+      }
+    }
+  }
+
+  property ("Check that linearAssignment is sound, i.e. <= interval assignment") {
+    forAll(GenClosedFunDBM()) {
+      case dbm : FunDBM[Closed, Double] =>
+      {
+        val o = new AbstractOctagon(dbm, oct, e)
+        forAll(GenLf(o.dimension)) {
+          case lf : LinearForm =>
+            forAll(Gen.choose(0, o.dimension - 1)) {
+              case vi : Int =>
+                {
+                  o.linearAssignment(vi, lf).toInterval <= o.toInterval.linearAssignment(vi, lf)
+                }
+            }
+        }
+      }
     }
   }
 }
