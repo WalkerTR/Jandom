@@ -60,13 +60,20 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
     high <- Gen.choose(low, Double.MaxValue).suchThat(_ > low)
   } yield (low, high)
 
-  def GenMatrix : Gen[FunMatrix[Double]] = for {
+  def GenFunMatrix(pTop: Int = 20, pInf: Int = 20) : Gen[FunMatrix[Double]] = for {
     d <- GenSmallEvenInt
-    rowSeq <- Gen.containerOfN[Array, Double](d, GenDoublesAndInf())
+    rowSeq <- Gen.containerOfN[Array, Double](d, GenDoublesAndInf(pInf))
     arrayOfRows <- Gen.containerOfN[Array, Array[Double]](d, rowSeq)
-  } yield (
-      new FunMatrix[Double](
-        (i: Int, j: Int) => arrayOfRows(i)(j), Dimension(d)))
+    matrix <- Gen.frequency(
+      (pTop, new FunMatrix[Double]((i: Int, j: Int) =>
+        if (i == j) 0 // If (i,i) != 0 we have bottom
+        else Double.PositiveInfinity, Dimension(d))),
+      (100 - pTop, new FunMatrix[Double](
+        (i: Int, j: Int) =>
+        if (i == j) 0
+        else arrayOfRows(i)(j), Dimension(d)))
+    )
+  } yield matrix
 
   implicit def arbBox : Arbitrary[box.Property] =
     Arbitrary {
@@ -271,7 +278,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   }
 
   property ("Check that strongClosure is coherent (condition 1 of 3 for strong closure)") {
-    forAll (GenMatrix) {
+    forAll (GenFunMatrix()) {
       (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
@@ -290,7 +297,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   }
 
   property ("Check that strongClosure is closed (condition 2 of 3 for strong closure)") {
-    forAll (GenMatrix) {
+    forAll (GenFunMatrix()) {
       (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
@@ -313,7 +320,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   }
 
   property ("Check that for strongClosure m_ij <= (m_{i, bari}+m_{barj, j})/2 holds (condition 3 of 3 for strong closure)") {
-    forAll (GenMatrix) {
+    forAll (GenFunMatrix()) {
       (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
