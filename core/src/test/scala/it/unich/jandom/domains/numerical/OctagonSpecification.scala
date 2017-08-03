@@ -19,11 +19,11 @@
 package it.unich.jandom.domains.numerical.octagon
 import it.unich.jandom.domains.numerical._
 import VarIndexOps._
-import org.scalatest.PropSpec
-import org.scalatest.prop.{PropertyChecks, Checkers}
-import org.scalacheck.Gen
+import org.scalatest._
+import prop._
+import org.scalacheck.Arbitrary._
 import org.scalacheck.Arbitrary
-import Arbitrary._
+import org.scalacheck.Gen
 
 class OctagonSpecification extends PropSpec with PropertyChecks {
   val e = FunDBMInstance.funDBM
