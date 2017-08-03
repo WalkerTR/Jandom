@@ -97,21 +97,28 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   def GenFunMatrix(d: Int, pTop: Int = 20, pInf: Int = 20) : Gen[FunMatrix[Double]] = for {
     rowSeq <- Gen.containerOfN[Array, Double](d, GenDoublesAndInf(pInf))
     arrayOfRows <- Gen.containerOfN[Array, Array[Double]](d, rowSeq)
-    matrix <- Gen.frequency(
-      (pTop, new FunMatrix[Double]((i: Int, j: Int) =>
-        if (i == j) 0 // If (i,i) != 0 we have bottom
-        else Double.PositiveInfinity, Dimension(d))),
-      (100 - pTop, new FunMatrix[Double](
-        (i: Int, j: Int) =>
+  } yield new FunMatrix[Double](
+      ((i: Int, j: Int) =>
         if (i == j) 0
-        else arrayOfRows(i)(j), Dimension(d)))
+        else arrayOfRows(i)(j)), Dimension(d))
+
+  def GenTop(nOfVars: Int): Gen[FunDBM[Closed, Double]] = Gen.const(new ClosedFunDBM(
+    // Caveat: top is not strongly closed from the defn, but we have it as an instance of FunDBM[Closed,_].
+        FunMatrix[Double]((i: Int, j: Int) =>
+        if (i == j) 0 // If (i,i) != 0 we have bottom
+        else Double.PositiveInfinity, Dimension(nOfVars*2)))
+  )
+
+  def GenClosedFunDBMOrTop(nOfVars: Int, pBot: Int = 10, pTop: Int = 20, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] =
+    Gen.frequency(
+      (100 - pTop, GenTop(nOfVars)),
+      (pTop, GenClosedFunDBM(nOfVars, pBot, pInf))
     )
-  } yield matrix
 
 
-  def GenClosedFunDBM(nOfVars: Int, pBot: Int = 10, pTop: Int = 20, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] = {
+  def GenClosedFunDBM(nOfVars: Int, pBot: Int = 10, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] = {
     val genRegularClosedDBM : Gen[FunDBM[Closed, Double]] =
-      for { m <- GenFunMatrix(nOfVars * 2, pTop, pInf).suchThat(BagnaraStrongClosure.strongClosure(_) != None)
+      for { m <- GenFunMatrix(nOfVars * 2, pInf).suchThat(BagnaraStrongClosure.strongClosure(_) != None)
         // HACK
       }
       yield
@@ -442,7 +449,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   property ("Check that toInterval yields a valid interval") {
     forAll(GenSmallInt) {
       (d: Int) =>
-      forAll(GenClosedFunDBM(d)) {
+      forAll(GenClosedFunDBMOrTop(d)) {
         case dbm : FunDBM[Closed, Double] =>
           {
             val o = new AbstractOctagon(dbm, oct, e)
@@ -456,7 +463,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   property ("Check that linearAssignment yields legal values") {
     forAll(GenSmallInt) {
       (d: Int) =>
-      forAll(GenClosedFunDBM(d)) {
+      forAll(GenClosedFunDBMOrTop(d)) {
         case dbm : FunDBM[Closed, Double] =>
           {
             val o = new AbstractOctagon(dbm, oct, e)
@@ -483,7 +490,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   property ("Check that linearAssignment is sound, i.e. <= interval assignment") {
     forAll(GenSmallInt) {
       (d: Int) =>
-      forAll(GenClosedFunDBM(d)) {
+      forAll(GenClosedFunDBMOrTop(d)) {
         case dbm : FunDBM[Closed, Double] =>
           {
             val o = new AbstractOctagon(dbm, oct, e)
