@@ -107,7 +107,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T >= _|_") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         val topoct =  AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
         val botoct = AbstractOctagon(e.bottomDBM[Double](VarCount(d)), oct, e)
         (topoct >= botoct)
@@ -117,9 +117,9 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T <> _|_ for different dim") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         forAll (GenSmallInt) {
-          case (delta: Int) => {
+          (delta: Int) => {
             val d1 = d + delta
             val topoct =  AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
             val botoct = AbstractOctagon(e.bottomDBM[Double](VarCount(d1)), oct, e)
@@ -135,9 +135,9 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T <> T for different dim") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         forAll (GenSmallInt) {
-          case (delta: Int) => {
+          (delta: Int) => {
             val d1 = d + delta
             val topoct =  AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
             val topoct2 = AbstractOctagon(e.topDBM[Double](VarCount(d1)), oct, e)
@@ -153,9 +153,9 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("_|_ <> _|_ for different dim") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         forAll (GenSmallInt) {
-          case (delta: Int) => {
+          (delta: Int) => {
             val d1 = d + delta
             val botoct =  AbstractOctagon(e.bottomDBM[Double](VarCount(d)), oct, e)
             val botoct2 = AbstractOctagon(e.bottomDBM[Double](VarCount(d1)), oct, e)
@@ -170,7 +170,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T >= T") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         val topoct =  AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
         val anotherTopoct = AbstractOctagon(e.bottomDBM[Double](VarCount(d)), oct, e)
         (topoct >= anotherTopoct)
@@ -180,7 +180,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T U _|_ = T != _|_") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         val topoct = AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
         val botoct = AbstractOctagon(e.bottomDBM[Double](VarCount(d)), oct, e)
         ((topoct union botoct) == topoct &
@@ -191,7 +191,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("T and _|_ intersection T = _|_") {
     forAll (GenSmallInt) {
-      case (d: Int) => {
+      (d: Int) => {
         val topoct = AbstractOctagon(e.topDBM[Double](VarCount(d)), oct, e)
         val botoct = AbstractOctagon(e.bottomDBM[Double](VarCount(d)), oct, e)
         ((topoct intersection botoct) != topoct &
@@ -202,27 +202,27 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("Union of [C1,C1], [C2, C2] == [C1, C2] w/C1 < C2") {
     forAll(GenOrderedDistinctPair) {
-      case (c1: Double, c2: Double) => {
+      (c : (Double, Double)) => {
         val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
-        val b1 = a.linearAssignment(0, c1)
-        val b2 = a.linearAssignment(0, c2)
+        val b1 = a.linearAssignment(0, c._1)
+        val b2 = a.linearAssignment(0, c._2)
         val union = b1 union b2
-        assert(c1 < c2)
+        assert(c._1 < c._2)
         (union.toInterval.isEmpty == false &
-         union.toInterval.high.head == c2 &
-         union.toInterval.low.head == c1)
+         union.toInterval.high.head == c._2 &
+         union.toInterval.low.head == c._1)
       }
     }
   }
 
   property ("Intersection of [C1,C1], [C2, C2] == _|_ w/C1 < C2") {
     forAll(GenOrderedDistinctPair) {
-      case (c1: Double, c2: Double) => {
+      (c : (Double, Double)) => {
         val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
-        val b1 = a.linearAssignment(0, c1)
-        val b2 = a.linearAssignment(0, c2)
+        val b1 = a.linearAssignment(0, c._1)
+        val b2 = a.linearAssignment(0, c._2)
         val intersection = b1 intersection b2
-        assert(c1 < c2)
+        assert(c._1 < c._2)
         (intersection.isBottom == true &
          intersection.toInterval.isEmpty == true)
       }
@@ -231,22 +231,22 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("[C1,C2] <= [C3<C1, C4>C2]") {
     forAll(GenOrderedDistinctPair) {
-      case (c1: Double, c2: Double) =>
+      (c: (Double, Double)) =>
         forAll(GenOrderedDistinctPair) {
-          case (c3: Double, c4: Double) => {
+          (d: (Double, Double)) => {
+            assert(d._1 < c._1)
+            assert(d._2 > c._2)
             val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
-            val lf1 = LinearForm.c(c1);
-            val lf2 = LinearForm.c(c2);
-            val posC = (c4 - c3) // c3 - c4 is certainly positive
+            val lf1 = LinearForm.c(c._1);
+            val lf2 = LinearForm.c(c._2);
+            val posC = (d._2 - d._1) // is certainly positive
             assert(posC > 0)
-            val lf3 = LinearForm.c(c1 - posC);
-            val lf4 = LinearForm.c(c2 + posC);
+            val lf3 = LinearForm.c(c._1 - posC);
+            val lf4 = LinearForm.c(c._2 + posC);
             val b1 = a.linearAssignment(0, lf1)
             val b2 = a.linearAssignment(0, lf2)
             val b3 = a.linearAssignment(0, lf3)
             val b4 = a.linearAssignment(0, lf4)
-            assert(c3 < c1)
-            assert(c4 > c2)
             val i1 = b1 union b2 // i1 = [x1,x2]
             val i2 = b3 union b4 // i2 = [x3,x4]
             (i1 <= i2)
@@ -257,7 +257,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("Check that strongClosure is coherent (condition 1 of 3 for strong closure)") {
     forAll (GenMatrix) {
-      case (m : FunMatrix[Double]) =>
+      (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
           case Some(c) =>
@@ -276,7 +276,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("Check that strongClosure is closed (condition 2 of 3 for strong closure)") {
     forAll (GenMatrix) {
-      case (m : FunMatrix[Double]) =>
+      (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
           case Some(c) =>
@@ -299,7 +299,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("Check that for strongClosure m_ij <= (m_{i, bari}+m_{barj, j})/2 holds (condition 3 of 3 for strong closure)") {
     forAll (GenMatrix) {
-      case (m : FunMatrix[Double]) =>
+      (m : FunMatrix[Double]) =>
         BagnaraStrongClosure.strongClosure(m) match {
           case None => false
           case Some(c) =>
