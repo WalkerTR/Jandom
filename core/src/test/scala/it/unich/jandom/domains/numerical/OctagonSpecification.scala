@@ -70,12 +70,16 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   implicit def arbBox : Arbitrary[box.Property] =
     Arbitrary {
-
       for {
         n <- Gen.choose(1,20)
         pairs : Array[(Double, Double)] <- Gen.containerOfN[Array, (Double, Double)](n, GenOrderedPair)
       } yield (new box.Property(pairs.unzip._1, pairs.unzip._2, false))
     }
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Begin properties
+  //////////////////////////////////////////////////////////////////////////////
 
   property("Can create from interval") {
     forAll {
