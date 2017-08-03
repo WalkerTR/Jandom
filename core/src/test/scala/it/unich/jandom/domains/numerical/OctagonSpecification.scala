@@ -220,9 +220,10 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
         val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
         val b1 = a.linearAssignment(0, c1)
         val b2 = a.linearAssignment(0, c2)
-        val union = b1 intersection b2
-        (union.isBottom == true &
-         union.toInterval.isEmpty == true)
+        val intersection = b1 intersection b2
+        (c1 < c2)
+        (intersection.isBottom == true &
+         intersection.toInterval.isEmpty == true)
       }
     }
   }
