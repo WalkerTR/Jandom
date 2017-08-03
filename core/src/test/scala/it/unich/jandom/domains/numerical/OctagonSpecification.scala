@@ -207,6 +207,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
         val b1 = a.linearAssignment(0, c1)
         val b2 = a.linearAssignment(0, c2)
         val union = b1 union b2
+        assert(c1 < c2)
         (union.toInterval.isEmpty == false &
          union.toInterval.high.head == c2 &
          union.toInterval.low.head == c1)
@@ -221,7 +222,7 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
         val b1 = a.linearAssignment(0, c1)
         val b2 = a.linearAssignment(0, c2)
         val intersection = b1 intersection b2
-        (c1 < c2)
+        assert(c1 < c2)
         (intersection.isBottom == true &
          intersection.toInterval.isEmpty == true)
       }
@@ -230,20 +231,22 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   property ("[C1,C2] <= [C3<C1, C4>C2]") {
     forAll(GenOrderedDistinctPair) {
-      case (x1: Double, x2: Double) =>
+      case (c1: Double, c2: Double) =>
         forAll(GenOrderedDistinctPair) {
-          case (x3: Double, x4: Double) => {
+          case (c3: Double, c4: Double) => {
             val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
-            val c1 = LinearForm.c(x1);
-            val c2 = LinearForm.c(x2);
-            val posC = (x4 - x3) // x3 - x4 is certainly positive
+            val lf1 = LinearForm.c(c1);
+            val lf2 = LinearForm.c(c2);
+            val posC = (c4 - c3) // c3 - c4 is certainly positive
             assert(posC > 0)
-            val c3 = LinearForm.c(x1 - posC);
-            val c4 = LinearForm.c(x2 + posC);
-            val b1 = a.linearAssignment(0, c1)
-            val b2 = a.linearAssignment(0, c2)
-            val b3 = a.linearAssignment(0, c3)
-            val b4 = a.linearAssignment(0, c4)
+            val lf3 = LinearForm.c(c1 - posC);
+            val lf4 = LinearForm.c(c2 + posC);
+            val b1 = a.linearAssignment(0, lf1)
+            val b2 = a.linearAssignment(0, lf2)
+            val b3 = a.linearAssignment(0, lf3)
+            val b4 = a.linearAssignment(0, lf4)
+            assert(c3 < c1)
+            assert(c4 > c2)
             val i1 = b1 union b2 // i1 = [x1,x2]
             val i2 = b3 union b4 // i2 = [x3,x4]
             (i1 <= i2)
