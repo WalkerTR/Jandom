@@ -507,4 +507,24 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
       }
     }
   }
+
+  property ("Check that forall X, Y : AbstractOctagon, (X widening Y) >= X, Y (condition 1 of 2 for soundness of widening)") {
+    forAll(GenSmallInt) {
+      (d: Int) =>
+      forAll(GenClosedFunDBMOrTop(d)) {
+        case dbmx : FunDBM[Closed, Double] =>
+          {
+            val x = new AbstractOctagon(dbmx, oct, e)
+            forAll(GenClosedFunDBMOrTop(d)) {
+              case dbmy : FunDBM[Closed, Double] =>
+                {
+                  val y = new AbstractOctagon(dbmy, oct, e)
+                  (x widening y) >= x
+                  (x widening y) >= y
+                }
+            }
+          }
+      }
+    }
+  }
 }
