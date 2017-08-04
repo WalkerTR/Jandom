@@ -43,6 +43,8 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
     // We generate only single precision floats to avoid false positives due to 754 edge cases
   )
 
+  def GenChain : Gen[Seq[Double]] = Gen.containerOf[List, Double](arbitrary[Double]).map(_.sorted)
+
   implicit def arbRational: Arbitrary[Rational] =
     Arbitrary {
       for {
