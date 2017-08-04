@@ -112,35 +112,22 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   def GenClosedFunDBMOrTop(nOfVars: Int, pBot: Int = 10, pTop: Int = 20, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] =
     Gen.frequency(
       (100 - pTop, GenTop(nOfVars)),
-      (pTop, GenClosedFunDBM(nOfVars, pBot, pInf))
+      (pTop, GenClosedFunDBM(nOfVars, pInf))
     )
 
 
-  def GenClosedFunDBM(nOfVars: Int, pBot: Int = 10, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] = {
-    val genRegularClosedDBM : Gen[FunDBM[Closed, Double]] =
-      for { m <- GenFunMatrix(nOfVars * 2, pInf).suchThat(BagnaraStrongClosure.strongClosure(_) != None)
-        // HACK
-      }
+  def GenClosedFunDBM(nOfVars: Int, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] =
+      for { m <- GenFunMatrix(nOfVars * 2, pInf) }
       yield
-        {
-          val closure = BagnaraStrongClosure.strongClosure(m)
-          if (closure == None) {
-            assert(false)
-            new BottomFunDBM(VarCount(nOfVars)) // HACK
-          } else {
-            new ClosedFunDBM(closure.get)
-          }
+      {
+        // caveat: there is no guarantee re: the distribution of bottoms, should probably include a few pre-computed non-bottom ones?
+        val closure = BagnaraStrongClosure.strongClosure(m)
+        if (closure == None) {
+          new BottomFunDBM(VarCount(nOfVars))
+        } else {
+          new ClosedFunDBM(closure.get)
         }
-
-    val genBottomDBM : Gen[FunDBM[Closed, Double]] = Gen.const(BottomFunDBM(VarCount(nOfVars)))
-
-    for {
-      dbm <- Gen.frequency(
-        (pBot, genBottomDBM),
-        (100 - pBot, genRegularClosedDBM)
-      )
-    } yield dbm
-  }
+      }
 
   implicit def arbBox : Arbitrary[box.Property] =
     Arbitrary {
