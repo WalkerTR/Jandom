@@ -375,14 +375,14 @@ case class AbstractOctagon[D <: NumericalDomain, M[_, _]](
     val indexedVars = vars.zipWithIndex
                           .map({ case (name, i) => (name, VarIndex(i))})
     val str =
-      for ((vari, vi) <- indexedVars;
-           (namei, posi) <- Seq((s"+$vari", varPlus(vi)),
-                                (s"-$vari", varMinus(vi)));
-           (varj, vj) <- indexedVars;
+      for ((varj, vj) <- indexedVars;
            (namej, posj) <- Seq((s"+$varj", varPlus(vj)),
-                                (s"-$varj", varMinus(vj)))) yield {
+                                (s"-$varj", varMinus(vj)));
+           (vari, vi) <- indexedVars;
+           (namei, posi) <- Seq((s"+$vari", varPlus(vi)),
+                                (s"-$vari", varMinus(vi)))) yield {
         val elem = e.get(posi, posj)(dbm)
-        s"$namei - $namej <= $elem"
+        s"$namej - $namei <= $elem"
       }
     "[ " + str.reduceOption(_ ++ " ; " ++ _).getOrElse("") + " ]"
   }
