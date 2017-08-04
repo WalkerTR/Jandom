@@ -85,14 +85,12 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   implicit val noShrink3: Shrink[FunMatrix[Double]] = Shrink.shrinkAny
 
   def GenOrderedPair : Gen[(Double, Double)] = for {
-    low <- arbitrary[Double]
-    high <- Gen.choose(low, Double.MaxValue)
+    low <- Gen.choose(Float.MinValue.toDouble, Float.MaxValue.toDouble)
+    high <- Gen.choose(low, Float.MaxValue.toDouble)
+    // We generate only single precision floats to avoid false positives due to 754 edge cases
   } yield (low, high)
 
-  def GenOrderedDistinctPair : Gen[(Double, Double)] = for {
-    low <- arbitrary[Double]
-    high <- Gen.choose(low, Double.MaxValue).suchThat(_ > low)
-  } yield (low, high)
+  val GenOrderedDistinctPair = GenOrderedPair.suchThat((pair:(Double, Double)) =>pair._2 > pair._1)
 
   def GenFunMatrix(pTop: Int = 20, pInf: Int = 20) : Gen[FunMatrix[Double]] = for {
     d <- GenSmallEvenInt
