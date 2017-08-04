@@ -328,9 +328,10 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
             assert(c._1 < c._2)
             assert(d._1 < d._2)
             val posC = (d._2 - d._1) // is certainly positive
+            assert(posC > 0)
             val c3 = c1 - posC
-            val c4 = c1 + posC
-            assert(c3 < c1 & c1 < c4 & c4 < c2)
+            val c4 = c2 + posC
+            assert(c3 < c1 & c1 < c4 & c4 > c2)
             val a = AbstractOctagon(e.topDBM[Double](VarCount(1)), oct, e)
             val b1 = a.linearAssignment(0, LinearForm.c(c1))
             val b2 = a.linearAssignment(0, LinearForm.c(c2))
