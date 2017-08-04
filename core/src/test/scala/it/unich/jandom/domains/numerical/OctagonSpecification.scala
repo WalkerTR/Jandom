@@ -37,10 +37,10 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
   def GenSmallInt : Gen[Int] = Gen.choose(1, 5)
   def GenSmallEvenInt : Gen[Int] = for (n <- GenSmallInt) yield (n * 2)
   def GenInf : Gen[Double] = Gen.const(Double.PositiveInfinity)
-  def GenNonnegDoubles : Gen[Double] = Gen.choose(0, Double.MaxValue)
   def GenDoublesAndInf(pInf: Int) : Gen[Double] = Gen.frequency(
     (pInf, GenInf),
-    (100 - pInf, GenNonnegDoubles)
+    (100 - pInf, Gen.choose(Float.MinValue.toDouble, Float.MaxValue.toDouble))
+    // We generate only single precision floats to avoid false positives due to 754 edge cases
   )
 
   implicit def arbRational: Arbitrary[Rational] =
