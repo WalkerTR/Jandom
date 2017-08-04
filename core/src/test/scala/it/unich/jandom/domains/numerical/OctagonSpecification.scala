@@ -111,12 +111,19 @@ class OctagonSpecification extends PropSpec with PropertyChecks {
 
   def GenClosedFunDBM(nOfVars: Int, pBot: Int = 10, pTop: Int = 20, pInf: Int = 30) : Gen[FunDBM[Closed, Double]] = {
     val genRegularClosedDBM : Gen[FunDBM[Closed, Double]] =
-      for { m <- GenFunMatrix(nOfVars * 2, pTop, pInf) }
-      yield {
-        val closure = BagnaraStrongClosure.strongClosure(m)
-        if (closure == None) new BottomFunDBM(VarCount(nOfVars))
-        else new ClosedFunDBM(closure.get)
+      for { m <- GenFunMatrix(nOfVars * 2, pTop, pInf).suchThat(BagnaraStrongClosure.strongClosure(_) != None)
+        // HACK
       }
+      yield
+        {
+          val closure = BagnaraStrongClosure.strongClosure(m)
+          if (closure == None) {
+            assert(false)
+            new BottomFunDBM(VarCount(nOfVars)) // HACK
+          } else {
+            new ClosedFunDBM(closure.get)
+          }
+        }
 
     val genBottomDBM : Gen[FunDBM[Closed, Double]] = Gen.const(BottomFunDBM(VarCount(nOfVars)))
 
